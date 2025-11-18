@@ -156,6 +156,46 @@
             border-bottom: 2px solid #333;
         }
 
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            margin: 20px auto;
+        }
+
+        .num-btn {
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .num-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .num-btn:active {
+            transform: scale(0.95);
+        }
+
+        .num-btn.erase {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .num-btn.erase:hover {
+            background: #d32f2f;
+        }
+
         .message {
             text-align: center;
             margin-top: 20px;
@@ -191,6 +231,19 @@
 
         <div class="grid-container" id="sudoku-grid"></div>
         
+        <div class="number-pad">
+            <button class="num-btn" data-number="1">1</button>
+            <button class="num-btn" data-number="2">2</button>
+            <button class="num-btn" data-number="3">3</button>
+            <button class="num-btn" data-number="4">4</button>
+            <button class="num-btn" data-number="5">5</button>
+            <button class="num-btn" data-number="6">6</button>
+            <button class="num-btn" data-number="7">7</button>
+            <button class="num-btn" data-number="8">8</button>
+            <button class="num-btn" data-number="9">9</button>
+            <button class="num-btn erase" data-number="0">✖</button>
+        </div>
+        
         <div class="message" id="message"></div>
     </div>
 
@@ -219,6 +272,36 @@
                 document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentDifficulty = btn.dataset.difficulty;
+            });
+        });
+
+        // Number pad
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!selectedCell || selectedCell.classList.contains('given')) {
+                    messageEl.textContent = '⚠️ Select an empty cell first!';
+                    messageEl.className = 'message error';
+                    return;
+                }
+                
+                const num = btn.dataset.number;
+                const idx = parseInt(selectedCell.dataset.index);
+                const row = Math.floor(idx / 9);
+                const col = idx % 9;
+                
+                if (num === '0') {
+                    // Erase
+                    selectedCell.textContent = '';
+                    selectedCell.classList.remove('user-input', 'error');
+                    board[row][col] = 0;
+                } else {
+                    // Set number
+                    selectedCell.textContent = num;
+                    selectedCell.classList.add('user-input');
+                    selectedCell.classList.remove('error');
+                    board[row][col] = parseInt(num);
+                }
+                messageEl.textContent = '';
             });
         });
 
