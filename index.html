@@ -16,7 +16,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
         }
@@ -43,29 +43,48 @@
             font-size: 0.9em;
         }
 
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .difficulty-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .difficulty-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
         .controls {
             display: flex;
             gap: 15px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
             justify-content: center;
         }
 
-        select, button {
+        button {
             padding: 12px 24px;
             font-size: 16px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        select {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        button {
             background: #667eea;
             color: white;
             font-weight: bold;
@@ -156,18 +175,18 @@
 </head>
 <body>
     <div class="app-container">
-        <h1>Sudoku</h1>
+        <h1>🎯 Sudoku</h1>
         <p class="subtitle">Click on a cell and type a number (1-9)</p>
         
+        <div class="difficulty-selector">
+            <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
         <div class="controls">
-            <select id="difficulty">
-                <option value="easy" selected>Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
             <button id="new-game">New Puzzle</button>
-            <button id="check">Check Solution</button>
-            <button id="solve">Solve</button>
+            <button id="check">Check</button>
         </div>
 
         <div class="grid-container" id="sudoku-grid"></div>
@@ -182,6 +201,7 @@
         let selectedCell = null;
         let board = Array(9).fill(null).map(() => Array(9).fill(0));
         let solution = Array(9).fill(null).map(() => Array(9).fill(0));
+        let currentDifficulty = 'medium';
 
         // Generate 81 cells
         for (let i = 0; i < 81; i++) {
@@ -192,6 +212,15 @@
             container.appendChild(cell);
             cells.push(cell);
         }
+
+        // Difficulty selector
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.difficulty;
+            });
+        });
 
         function selectCell(cell) {
             if (cell.classList.contains('given')) return;
@@ -346,8 +375,7 @@
 
         // New game
         document.getElementById('new-game').addEventListener('click', () => {
-            const difficulty = document.getElementById('difficulty').value;
-            board = generatePuzzle(difficulty);
+            board = generatePuzzle(currentDifficulty);
             displayBoard(board, true);
             messageEl.textContent = '✨ New puzzle generated!';
             messageEl.className = 'message success';
@@ -384,18 +412,6 @@
                 messageEl.textContent = '🎉 Perfect! You solved it!';
                 messageEl.className = 'message success';
             }
-        });
-
-        // Solve automatically
-        document.getElementById('solve').addEventListener('click', () => {
-            displayBoard(solution, false);
-            cells.forEach(cell => {
-                if (!cell.classList.contains('given')) {
-                    cell.classList.add('user-input');
-                }
-            });
-            messageEl.textContent = '✅ Puzzle solved!';
-            messageEl.className = 'message success';
         });
 
         // Generate initial puzzle
