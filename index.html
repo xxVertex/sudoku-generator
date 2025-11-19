@@ -410,8 +410,6 @@
         });
 
         function selectCell(cell) {
-            if (cell.classList.contains('given')) return;
-            
             if (selectedCell) {
                 selectedCell.classList.remove('selected');
             }
@@ -448,15 +446,29 @@
 
             if (e.key >= '1' && e.key <= '9') {
                 const num = parseInt(e.key);
-                selectedCell.textContent = e.key;
-                selectedCell.classList.add('user-input');
-                selectedCell.classList.remove('error');
-                board[row][col] = num;
+                
+                if (notesMode) {
+                    // Toggle note
+                    if (notes[row][col].has(num)) {
+                        notes[row][col].delete(num);
+                    } else {
+                        notes[row][col].add(num);
+                    }
+                    updateCellDisplay(selectedCell, idx);
+                } else {
+                    // Set main number
+                    selectedCell.classList.add('user-input');
+                    selectedCell.classList.remove('error');
+                    board[row][col] = num;
+                    notes[row][col].clear();
+                    updateCellDisplay(selectedCell, idx);
+                }
                 messageEl.textContent = '';
             } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
-                selectedCell.textContent = '';
                 selectedCell.classList.remove('user-input', 'error');
                 board[row][col] = 0;
+                notes[row][col].clear();
+                updateCellDisplay(selectedCell, idx);
             }
         });
 
@@ -568,12 +580,17 @@
                 const col = idx % 9;
                 const value = board[row][col];
                 
-                cell.textContent = value || '';
                 cell.classList.remove('given', 'user-input', 'selected', 'error');
                 
                 if (value && isInitial) {
                     cell.classList.add('given');
                 }
+                
+                if (isInitial) {
+                    notes[row][col].clear();
+                }
+                
+                updateCellDisplay(cell, idx);
             });
             selectedCell = null;
         }
