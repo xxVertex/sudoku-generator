@@ -131,7 +131,7 @@
             display: grid;
             grid-template-columns: repeat(9, 1fr);
             grid-template-rows: repeat(9, 1fr);
-            gap: 1px;
+            gap: 0;
             width: 450px;
             height: 450px;
             background-color: #333;
@@ -140,6 +140,7 @@
 
         .cell {
             background-color: white;
+            border: 1px solid #333;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -199,14 +200,23 @@
         }
 
         /* Thicker borders for 3x3 boxes */
-        .cell:nth-child(3n) {
-            border-right: 2px solid #333;
+        /* Thick vertical borders */
+        .cell {
+            border-right: 1px solid #333;
+            border-bottom: 1px solid #333;
         }
 
-        .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) {
-            border-bottom: 2px solid #333;
+        .cell:nth-child(9n + 3),
+        .cell:nth-child(9n + 6) {
+            border-right: 3px solid #333;
         }
+
+        /* Thick horizontal borders */
+        .cell:nth-child(n + 19):nth-child(-n + 27),
+        .cell:nth-child(n + 46):nth-child(-n + 54) {
+            border-bottom: 3px solid #333;
+        }
+
 
         .number-pad {
             display: grid;
@@ -266,6 +276,11 @@
         .message.error {
             color: #f44336;
         }
+        .cell.given .main-number {
+    color: #000;
+    font-weight: 900;
+}
+
     </style>
 </head>
 <body>
@@ -645,9 +660,6 @@
 
 <!--
 TO DO:
-    - Fix arrow navigation:
-        When moving trough cells with the arrow keys across over an arrow that is given it doesn't go past, but it goes past when navigating through the
-        empty or written by me cells.
     - Fix notes functionality:
         When I click on a cell to write a note, it doesn't write the note in the cell.
 
