@@ -277,10 +277,17 @@
             color: #f44336;
         }
         .cell.given .main-number {
-    color: #000;
-    font-weight: 900;
-}
+            color: #000;
+            font-weight: 900;
+        }
+        .cell.highlight {
+            background-color: #81d4fa !important;
+        }
 
+        .cell.selected {
+            background-color: #0288d1 !important;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -322,6 +329,8 @@
     <script>
         const container = document.getElementById('sudoku-grid');
         const messageEl = document.getElementById('message');
+        const notesToggle = document.getElementById('notes-toggle');
+
         let cells = [];
         let selectedCell = null;
         let board = Array(9).fill(null).map(() => Array(9).fill(0));
@@ -329,6 +338,11 @@
         let notes = Array(9).fill(null).map(() => Array(9).fill(null).map(() => new Set()));
         let currentDifficulty = 'medium';
         let notesMode = false;
+        
+        notesToggle.addEventListener('click', () => {
+            notesMode = !notesMode;
+            notesToggle.classList.toggle('active');
+        });
 
         // Generate 81 cells
         for (let i = 0; i < 81; i++) {
@@ -371,7 +385,7 @@
             const col = idx % 9;
             const mainNumber = cell.querySelector('.main-number');
             const notesGrid = cell.querySelector('.notes-grid');
-            
+
             if (board[row][col] !== 0) {
                 // Show main number
                 mainNumber.textContent = board[row][col];
@@ -380,9 +394,8 @@
             } else {
                 // Show notes
                 mainNumber.style.display = 'none';
-                notesGrid.style.display = 'grid';
-                
-                // Update each note position
+                notesGrid.style.display = notesMode ? 'grid' : 'none';
+
                 notesGrid.querySelectorAll('.note').forEach(noteSpan => {
                     const num = parseInt(noteSpan.dataset.number);
                     noteSpan.textContent = notes[row][col].has(num) ? num : '';
@@ -414,10 +427,10 @@
                     updateCellDisplay(selectedCell, idx);
                 } else {
                     // Set main number and clear notes
-                    selectedCell.classList.add('user-input');
-                    selectedCell.classList.remove('error');
                     board[row][col] = num;
                     notes[row][col].clear();
+                    selectedCell.classList.add('user-input');
+                    selectedCell.classList.remove('error');
                     updateCellDisplay(selectedCell, idx);
                 }
                 messageEl.textContent = '';
@@ -428,8 +441,33 @@
             if (selectedCell) {
                 selectedCell.classList.remove('selected');
             }
-            
+
+            // Remove all previous highlights
+            cells.forEach(c => c.classList.remove('highlight'));
+
             selectedCell = cell;
+            cell.classList.add('selected');
+
+            const idx = parseInt(cell.dataset.index);
+            const row = Math.floor(idx / 9);
+            const col = idx % 9;
+
+            // Highlight row and column
+            for (let i = 0; i < 9; i++) {
+                cells[row * 9 + i].classList.add('highlight'); // row
+                cells[i * 9 + col].classList.add('highlight'); // column
+            }
+
+            // Highlight 3x3 box
+            const startRow = row - (row % 3);
+            const startCol = col - (col % 3);
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    cells[r * 9 + c].classList.add('highlight');
+                }
+            }
+
+            // Keep the selected cell’s special style
             cell.classList.add('selected');
         }
 
@@ -657,13 +695,3 @@
     </script>
 </body>
 </html>
-
-<!--
-TO DO:
-    - Fix notes functionality:
-        When I click on a cell to write a note, it doesn't write the note in the cell.
-
-ADD:
-    - Row and column highlight when a cell is selected.
-    - 
--->
