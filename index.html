@@ -100,6 +100,25 @@
             transform: translateY(0);
         }
 
+        #notes-toggle {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        #notes-toggle.active {
+            background: #667eea;
+            color: white;
+        }
+
+        #notes-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        #notes-toggle.active:hover {
+            background: #5568d3;
+        }
+
         .game-layout {
             display: flex;
             gap: 40px;
@@ -128,6 +147,32 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
+            position: relative;
+        }
+
+        .cell .main-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .cell .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 2px;
+        }
+
+        .cell .note {
+            font-size: 10px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cell:hover:not(.given) {
@@ -236,6 +281,7 @@
 
         <div class="controls">
             <button id="new-game">New Puzzle</button>
+            <button id="notes-toggle">📝 Notes</button>
             <button id="check">Check</button>
         </div>
 
@@ -265,7 +311,9 @@
         let selectedCell = null;
         let board = Array(9).fill(null).map(() => Array(9).fill(0));
         let solution = Array(9).fill(null).map(() => Array(9).fill(0));
+        let notes = Array(9).fill(null).map(() => Array(9).fill(null).map(() => new Set()));
         let currentDifficulty = 'medium';
+        let notesMode = false;
 
         // Generate 81 cells
         for (let i = 0; i < 81; i++) {
@@ -273,6 +321,23 @@
             cell.className = 'cell';
             cell.dataset.index = i;
             cell.addEventListener('click', () => selectCell(cell));
+            
+            // Add notes grid structure
+            const notesGrid = document.createElement('div');
+            notesGrid.className = 'notes-grid';
+            for (let j = 1; j <= 9; j++) {
+                const noteSpan = document.createElement('span');
+                noteSpan.className = 'note';
+                noteSpan.dataset.number = j;
+                notesGrid.appendChild(noteSpan);
+            }
+            cell.appendChild(notesGrid);
+            
+            // Add main number display
+            const mainNumber = document.createElement('div');
+            mainNumber.className = 'main-number';
+            cell.appendChild(mainNumber);
+            
             container.appendChild(cell);
             cells.push(cell);
         }
@@ -286,6 +351,30 @@
             });
         });
 
+        function updateCellDisplay(cell, idx) {
+            const row = Math.floor(idx / 9);
+            const col = idx % 9;
+            const mainNumber = cell.querySelector('.main-number');
+            const notesGrid = cell.querySelector('.notes-grid');
+            
+            if (board[row][col] !== 0) {
+                // Show main number
+                mainNumber.textContent = board[row][col];
+                mainNumber.style.display = 'block';
+                notesGrid.style.display = 'none';
+            } else {
+                // Show notes
+                mainNumber.style.display = 'none';
+                notesGrid.style.display = 'grid';
+                
+                // Update each note position
+                notesGrid.querySelectorAll('.note').forEach(noteSpan => {
+                    const num = parseInt(noteSpan.dataset.number);
+                    noteSpan.textContent = notes[row][col].has(num) ? num : '';
+                });
+            }
+        }
+
         // Number pad
         document.querySelectorAll('.num-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -295,16 +384,27 @@
                     return;
                 }
                 
-                const num = btn.dataset.number;
+                const num = parseInt(btn.dataset.number);
                 const idx = parseInt(selectedCell.dataset.index);
                 const row = Math.floor(idx / 9);
                 const col = idx % 9;
                 
-                // Set number
-                selectedCell.textContent = num;
-                selectedCell.classList.add('user-input');
-                selectedCell.classList.remove('error');
-                board[row][col] = parseInt(num);
+                if (notesMode) {
+                    // Toggle note
+                    if (notes[row][col].has(num)) {
+                        notes[row][col].delete(num);
+                    } else {
+                        notes[row][col].add(num);
+                    }
+                    updateCellDisplay(selectedCell, idx);
+                } else {
+                    // Set main number and clear notes
+                    selectedCell.classList.add('user-input');
+                    selectedCell.classList.remove('error');
+                    board[row][col] = num;
+                    notes[row][col].clear();
+                    updateCellDisplay(selectedCell, idx);
+                }
                 messageEl.textContent = '';
             });
         });
@@ -525,3 +625,11 @@
     </script>
 </body>
 </html>
+
+<!--
+TO DO:
+    - Fix arrow navigation:
+        When moving trough cells with the arrow keys across over an arrow that is given it doesn't go past, but it goes past when navigating through the
+        empty or written by me cells.
+
+-->
