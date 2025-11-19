@@ -26,7 +26,7 @@
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 900px;
         }
 
         h1 {
@@ -100,6 +100,14 @@
             transform: translateY(0);
         }
 
+        .game-layout {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .grid-container {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
@@ -109,7 +117,6 @@
             height: 450px;
             background-color: #333;
             border: 3px solid #333;
-            margin: 0 auto;
         }
 
         .cell {
@@ -160,8 +167,7 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            max-width: 300px;
-            margin: 20px auto;
+            max-width: 200px;
         }
 
         .num-btn {
@@ -174,6 +180,10 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .num-btn:hover {
@@ -229,18 +239,20 @@
             <button id="check">Check</button>
         </div>
 
-        <div class="grid-container" id="sudoku-grid"></div>
-        
-        <div class="number-pad">
-            <button class="num-btn" data-number="1">1</button>
-            <button class="num-btn" data-number="2">2</button>
-            <button class="num-btn" data-number="3">3</button>
-            <button class="num-btn" data-number="4">4</button>
-            <button class="num-btn" data-number="5">5</button>
-            <button class="num-btn" data-number="6">6</button>
-            <button class="num-btn" data-number="7">7</button>
-            <button class="num-btn" data-number="8">8</button>
-            <button class="num-btn" data-number="9">9</button>
+        <div class="game-layout">
+            <div class="grid-container" id="sudoku-grid"></div>
+            
+            <div class="number-pad">
+                <button class="num-btn" data-number="1">1</button>
+                <button class="num-btn" data-number="2">2</button>
+                <button class="num-btn" data-number="3">3</button>
+                <button class="num-btn" data-number="4">4</button>
+                <button class="num-btn" data-number="5">5</button>
+                <button class="num-btn" data-number="6">6</button>
+                <button class="num-btn" data-number="7">7</button>
+                <button class="num-btn" data-number="8">8</button>
+                <button class="num-btn" data-number="9">9</button>
+            </div>
         </div>
         
         <div class="message" id="message"></div>
@@ -288,18 +300,11 @@
                 const row = Math.floor(idx / 9);
                 const col = idx % 9;
                 
-                if (num === '0') {
-                    // Erase
-                    selectedCell.textContent = '';
-                    selectedCell.classList.remove('user-input', 'error');
-                    board[row][col] = 0;
-                } else {
-                    // Set number
-                    selectedCell.textContent = num;
-                    selectedCell.classList.add('user-input');
-                    selectedCell.classList.remove('error');
-                    board[row][col] = parseInt(num);
-                }
+                // Set number
+                selectedCell.textContent = num;
+                selectedCell.classList.add('user-input');
+                selectedCell.classList.remove('error');
+                board[row][col] = parseInt(num);
                 messageEl.textContent = '';
             });
         });
@@ -317,11 +322,29 @@
 
         // Handle keyboard input
         document.addEventListener('keydown', (e) => {
-            if (!selectedCell || selectedCell.classList.contains('given')) return;
+            if (!selectedCell) return;
             
             const idx = parseInt(selectedCell.dataset.index);
             const row = Math.floor(idx / 9);
             const col = idx % 9;
+
+            // Arrow key navigation
+            if (e.key === 'ArrowUp' && row > 0) {
+                selectCell(cells[idx - 9]);
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown' && row < 8) {
+                selectCell(cells[idx + 9]);
+                e.preventDefault();
+            } else if (e.key === 'ArrowLeft' && col > 0) {
+                selectCell(cells[idx - 1]);
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight' && col < 8) {
+                selectCell(cells[idx + 1]);
+                e.preventDefault();
+            }
+            
+            // Number input for non-given cells
+            if (selectedCell.classList.contains('given')) return;
 
             if (e.key >= '1' && e.key <= '9') {
                 const num = parseInt(e.key);
@@ -330,7 +353,7 @@
                 selectedCell.classList.remove('error');
                 board[row][col] = num;
                 messageEl.textContent = '';
-            } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
                 selectedCell.textContent = '';
                 selectedCell.classList.remove('user-input', 'error');
                 board[row][col] = 0;
